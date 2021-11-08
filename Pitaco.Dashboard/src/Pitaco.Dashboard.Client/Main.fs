@@ -80,6 +80,7 @@ type DashboardService =
         signIn : string * string -> Async<option<string>>
         getUsername : unit -> Async<string>
         signOut : unit -> Async<unit>
+        signUp : string * string * string -> Async<unit>
     }
 
     interface IRemoteService with

@@ -5,9 +5,17 @@ open Microsoft.AspNetCore.Hosting
 open Bolero.Remoting
 open Bolero.Remoting.Server
 open Pitaco.Dashboard
+open System.Collections.Generic
+
+type DbUser = { 
+    url: string
+    password: string 
+}
 
 type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<Client.Main.DashboardService>()
+
+    let users = new List<DbUser>()
 
     override this.Handler =
         {
@@ -27,12 +35,17 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             //}
 
             signIn = fun (username, password) -> async {
-                if password = "password" then
-                    do! ctx.HttpContext.AsyncSignIn(username, TimeSpan.FromDays(365.))
-                    return Some username
-                else
-                    return None
+                return try Some (users.Find(fun x -> x.url=username && x.password=password)).url
+                        with
+                        | ex -> None
             }
+                //match List.tryFind (fun x -> x.url=username && x.password=password) users with
+                //| None -> 
+                //    return None
+                //| Some x -> 
+                //    do! ctx.HttpContext.AsyncSignIn(username, TimeSpan.FromDays(365.))
+                //    return Some x.url
+            //}
 
             signOut = fun () -> async {
                 return! ctx.HttpContext.AsyncSignOut()
@@ -40,5 +53,9 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
 
             getUsername = ctx.Authorize <| fun () -> async {
                 return ctx.HttpContext.User.Identity.Name
+            }
+
+            signUp = fun (title, url, password) -> async {
+                users.Add({ url=url; password=password }) |> ignore
             }
         }
