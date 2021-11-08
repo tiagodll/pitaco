@@ -12,6 +12,7 @@ open Bolero.Templating.Client
 type Page =
     | [<EndPoint "/">] Homepage
     | [<EndPoint "/dashboard">] Dashboard
+    | [<EndPoint "/signup">] SignUp
 
 /// The Elmish application's model.
 type Model =
@@ -24,6 +25,7 @@ type Model =
 and PageState =
     {
         signIn: SigninState
+        signUp: SignupState option
         dashboard: DashboardState
     }
 and SigninState =
@@ -33,6 +35,14 @@ and SigninState =
         signedInAs: option<string>
         signInFailed: bool
     }
+
+and SignupState =
+    {
+        title: string
+        url: string
+        password: string
+        password2: string
+    }
 and DashboardState = 
     {
         website: Website
@@ -40,7 +50,7 @@ and DashboardState =
 and Website = 
     {
         url: string
-        name: string
+        title: string
     }
 
 let initModel =
@@ -54,8 +64,9 @@ let initModel =
                 signedInAs = None
                 signInFailed = false
             }
+            signUp = None
             dashboard = {
-                website = { url=""; name="" }
+                website = { url=""; title="" }
             }
         }
     }
@@ -79,6 +90,10 @@ type Message =
     | SetPage of Page
     | SetUsername of string
     | SetPassword of string
+    | SetSignUpTitle of string
+    | SetSignUpUrl of string
+    | SetSignUpPassword of string
+    | SetSignUpPassword2 of string
     | GetSignedInAs
     | GetUrls
     | RecvSignedInAs of option<string>
@@ -88,6 +103,18 @@ type Message =
     | RecvSignOut
     | Error of exn
     | ClearError
+
+
+let signUpOrNew (signup:SignupState option) =
+    match signup with
+    | Some x -> x
+    | None -> {
+            title = ""
+            url = ""
+            password = ""
+            password2 = ""
+        }
+
 
 let update remote message model =
     let onSignIn = function
@@ -101,6 +128,19 @@ let update remote message model =
         { model with pageState={ model.pageState with signIn={ model.pageState.signIn with username = s }}}, Cmd.none
     | SetPassword s ->
         { model with pageState={ model.pageState with signIn={ model.pageState.signIn with password = s }}}, Cmd.none
+    | SetSignUpTitle s ->
+        let signUp' = {signUpOrNew model.pageState.signUp with title = s}
+        { model with pageState={ model.pageState with signUp=Some signUp'}}, Cmd.none
+    | SetSignUpUrl s ->
+        let signUp' = {signUpOrNew model.pageState.signUp with url = s}
+        { model with pageState={ model.pageState with signUp=Some signUp'}}, Cmd.none
+    | SetSignUpPassword s ->
+        let signUp' = {signUpOrNew model.pageState.signUp with password = s}
+        { model with pageState={ model.pageState with signUp=Some signUp'}}, Cmd.none
+    | SetSignUpPassword2 s ->
+        let signUp' = {signUpOrNew model.pageState.signUp with password2 = s}
+        { model with pageState={ model.pageState with signUp=Some signUp'}}, Cmd.none
+
     | GetSignedInAs ->
         model, Cmd.OfAuthorized.either remote.getUsername () RecvSignedInAs Error
     | RecvSignedInAs username ->
@@ -139,6 +179,9 @@ let homePage model dispatch =
             span[][text "good question? <br> should we have a markdown parser here?"]
         ]
         a [on.click (fun _ -> dispatch <| SetPage Dashboard)] [text "Sign in"]
+        br[]
+        span[][text "not a member yet?"]
+        a [on.click (fun _ -> dispatch <| SetPage SignUp)] [text "Sign up"]
     ]
 
 let dashboardPage model dispatch =
@@ -147,7 +190,7 @@ let dashboardPage model dispatch =
         //button [on.click (fun _ -> dispatch <| GetLikes model.signedInAs.Value)] [text "Reload"]
         button [on.click (fun _ -> dispatch SendSignOut)] [text "Sign out"]
         span[][text model.pageState.dashboard.website.url]
-        span[][text model.pageState.dashboard.website.name]
+        span[][text model.pageState.dashboard.website.title]
         //ul[attr.classes ["like-list"] ] [
         //    forEach model.pageState.dashboard.website <| fun l ->
         //    li [][
@@ -176,6 +219,32 @@ let signInPage model dispatch =
         ]
     ]
 
+let signUpPage model (signup:SignupState) dispatch =
+    div[][
+        h1 [attr.classes ["title"]] [text "Sign in"]
+        form [on.submit (fun _ -> dispatch SendSignIn)][
+            div [attr.classes ["field"]][
+                label [attr.classes ["label"]] [text "Website title"]
+                input [attr.classes ["input"]; bind.input.string signup.title (dispatch << SetSignUpTitle)]
+            ]
+            div [attr.classes ["field"]][
+                label [attr.classes ["label"]] [text "Website Url"]
+                input [attr.classes ["input"]; bind.input.string signup.url (dispatch << SetSignUpUrl)]
+            ]
+            div [attr.classes ["field"]][
+                label [attr.classes ["label"]] [text "Password"]
+                input [attr.classes ["input"]; attr.``type`` "password"; bind.input.string signup.password (dispatch << SetSignUpPassword)]
+            ]
+            div [attr.classes ["field"]][
+                label [attr.classes ["label"]] [text "Repeat Password"]
+                input [attr.classes ["input"]; attr.``type`` "password"; bind.input.string signup.password (dispatch << SetSignUpPassword2)]
+            ]
+            div [attr.classes ["field"]][
+                input [attr.classes ["input"]; attr.``type`` "submit"; attr.value "Sign up"]
+            ]
+        ]
+    ]
+
 let view model dispatch =
     section [] [
         // BODY
@@ -189,6 +258,10 @@ let view model dispatch =
             cond model.pageState.signIn.signedInAs <| function
                 | Some _ -> dashboardPage model dispatch
                 | None -> homePage model dispatch
+        
+        | SignUp ->
+            let signup = signUpOrNew model.pageState.signUp
+            signUpPage model signup dispatch
         
         //notification
         div [attr.id "notification-area"] [

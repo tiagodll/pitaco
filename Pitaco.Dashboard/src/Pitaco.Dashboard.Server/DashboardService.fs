@@ -14,7 +14,7 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             getWebsite = ctx.Authorize <| fun () -> async {
                 return {
                     url = "www.test.com"
-                    name = "The test"
+                    title = "The test"
                 }
             }
 
