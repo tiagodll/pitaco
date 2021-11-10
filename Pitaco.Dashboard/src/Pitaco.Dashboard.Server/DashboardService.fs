@@ -9,13 +9,14 @@ open System.Collections.Generic
 
 type DbUser = { 
     url: string
+    title: string
     password: string 
 }
 
 type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
-    inherit RemoteHandler<Client.Main.DashboardService>()
+    inherit RemoteHandler<Client.DashboardService.DashboardService>()
 
-    let users = new List<DbUser>()
+    let mutable users = [{url="tiago.dalligna.com"; title="cyborg"; password="asd"}]
 
     override this.Handler =
         {
@@ -26,26 +27,14 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 }
             }
 
-            //addBook = ctx.Authorize <| fun book -> async {
-            //    books.Add(book)
-            //}
-
-            //removeBookByIsbn = ctx.Authorize <| fun isbn -> async {
-            //    books.RemoveAll(fun b -> b.isbn = isbn) |> ignore
-            //}
-
             signIn = fun (username, password) -> async {
-                return try Some (users.Find(fun x -> x.url=username && x.password=password)).url
-                        with
-                        | ex -> None
+                match List.tryFind (fun x -> x.url=username && x.password=password) users with
+                    | None -> 
+                        return None
+                    | Some x -> 
+                        do! ctx.HttpContext.AsyncSignIn(username, TimeSpan.FromDays(365.))
+                        return Some x.url
             }
-                //match List.tryFind (fun x -> x.url=username && x.password=password) users with
-                //| None -> 
-                //    return None
-                //| Some x -> 
-                //    do! ctx.HttpContext.AsyncSignIn(username, TimeSpan.FromDays(365.))
-                //    return Some x.url
-            //}
 
             signOut = fun () -> async {
                 return! ctx.HttpContext.AsyncSignOut()
@@ -55,7 +44,8 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 return ctx.HttpContext.User.Identity.Name
             }
 
-            signUp = fun (title, url, password) -> async {
-                users.Add({ url=url; password=password }) |> ignore
+            signUp = fun (signUpRequest) -> async {
+                users <- List.append [{ url=signUpRequest.url; title=signUpRequest.title; password=signUpRequest.password}] users
+                return None
             }
         }
