@@ -12,4 +12,5 @@ module Model =
         url: string
         password: string
         password2: string
+        signUpDone: bool
     }

@@ -31,6 +31,7 @@ let blankSignUp = {
     url = ""
     password = ""
     password2 = ""
+    signUpDone = false
 }
 
 let init() = 
@@ -99,7 +100,7 @@ let update remote message model =
     | SendSignUp ->
         model, Cmd.OfAsync.either remote.signUp model.signUp RecvSignUp Error
     | RecvSignUp error ->
-        { model with error = error }, Cmd.none // onSignIn username
+        { model with error = error; signUp = {model.signUp with signUpDone = true }}, Cmd.none // onSignIn username
 
     | Error RemoteUnauthorizedException ->
         { model with error = Some "You have been logged out."; signIn={ model.signIn with signedInAs = None }}, Cmd.none

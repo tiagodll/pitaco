@@ -69,9 +69,18 @@ let update remote message model =
     | ClearError ->
         { model with error = None }, Cmd.none
 
-    | AuthMsg msg' -> 
-        let res', cmd' = Auth.update remote msg' model.auth
-        { model with auth = res' }, Cmd.map AuthMsg cmd'
+    | AuthMsg msg' ->
+        match msg' with
+        | Auth.Msg.RecvSignUp x ->
+            match x with
+            | None -> model, Cmd.ofMsg (SetPage Dashboard)
+            | Some e -> 
+                let res', cmd' = Auth.update remote msg' model.auth
+                { model with auth = res' }, Cmd.map AuthMsg cmd'
+                //model, Cmd.ofMsg (SetPage Dashboard) // todo: not redirect when return error
+        | _ -> 
+            let res', cmd' = Auth.update remote msg' model.auth
+            { model with auth = res' }, Cmd.map AuthMsg cmd'
 
 /// TODO: extract router
 let router = Router.infer SetPage (fun model -> model.page)
