@@ -16,6 +16,7 @@ type Page =
     | [<EndPoint "/">] Homepage
     | [<EndPoint "/dashboard">] Dashboard
     | [<EndPoint "/signup">] SignUp
+    | [<EndPoint "/comments/{url}">] CommentsPage of url:string
 
 /// The Elmish application's model.
 type Model =
@@ -23,13 +24,17 @@ type Model =
         page: Page
         error: string option
         dashboard: DashboardState
+        comments: CommentsState
         auth: Auth.Model
     }
-and DashboardState = 
-    {
-        website: Website
-    }
-
+and DashboardState = {
+    website: Website
+}
+and CommentsState = {
+    url: string
+    comments: Comment list
+    draft: Comment
+}
 
 let initModel =
     {
@@ -38,29 +43,60 @@ let initModel =
         dashboard = {
             website = { url=""; title="" }
         }
+        comments = {
+            url = ""
+            comments = []
+            draft = {url=""; text=""; author=""}
+        }
         auth = Auth.init()
     }
 
 /// The Elmish application's update messages.
 type Message =
     | SetPage of Page
-    | GetUrls
+    //| GetComments of string
+    | CommentsLoaded of Comment list
+    | SetCommentText of string
+    | SetCommentAuthor of string
+    | PostComment
+    | CommentAdded of string option
     | Error of exn
     | ClearError
     | AuthMsg of Auth.Msg
 
 
+let loadComments url remote =
+    Cmd.OfAsync.either remote.getComments (url) CommentsLoaded Error
+let postComment remote cmt =
+    Cmd.OfAsync.either remote.addComment cmt CommentAdded Error
 
 let update remote message model =
-    let onSignIn = function
-        | Some _ -> Cmd.ofMsg GetUrls
-        | None -> Cmd.none
+    //let onSignIn = function
+    //    | Some _ -> Cmd.ofMsg GetUrls
+    //    | None -> Cmd.none
     match message with
     | SetPage page ->
-        { model with page = page }, Cmd.none
+        match page with
+        | CommentsPage url -> { model with page=page; comments = {model.comments with url = url}}, loadComments url remote
+        | _ -> { model with page = page }, Cmd.none
 
-    | GetUrls -> model,Cmd.none
+    | CommentsLoaded comments ->
+        {model with comments={model.comments with comments = comments}}, Cmd.none
+    | PostComment ->
+        let cmt = {model.comments.draft with url=model.comments.url}
+        model, postComment remote cmt
+    | CommentAdded err ->
+        match err with
+        | None -> 
+            let comments' = List.append model.comments.comments [model.comments.draft]
+            {model with comments={model.comments with comments=comments'; draft={url=""; text=""; author=""}}}, Cmd.none
+        | Some s ->
+            {model with error = Some s}, Cmd.none
 
+    | SetCommentText text ->
+        {model with comments={model.comments with draft={model.comments.draft with text=text}}}, Cmd.none
+    | SetCommentAuthor text ->
+        {model with comments={model.comments with draft={model.comments.draft with author=text}}}, Cmd.none
 
     | Error RemoteUnauthorizedException ->
         { model with error = Some "You have been logged out."; auth={ model.auth with signIn={ model.auth.signIn with signedInAs = None }}}, Cmd.none
@@ -82,10 +118,9 @@ let update remote message model =
             let res', cmd' = Auth.update remote msg' model.auth
             { model with auth = res' }, Cmd.map AuthMsg cmd'
 
-/// TODO: extract router
+
 let router = Router.infer SetPage (fun model -> model.page)
 
-// TODO: extract view
 let errorNotification err clear =
     div [attr.classes ["notification"; "is-warning"]] [
         button [attr.classes ["delete"]; on.click clear ] []
@@ -93,32 +128,36 @@ let errorNotification err clear =
     ]
 
 let homePage model dispatch =
-    div[attr.classes ["homepage"]] [
+    div [attr.classes ["homepage"]] [
         h3 [] [text "why to use this app?"]
-        ul[attr.classes ["like-list"] ] [
-            span[][text "good question? <br> should we have a markdown parser here?"]
+        ul [attr.classes ["like-list"] ] [
+            span [] [text "good question? <br> should we have a markdown parser here?"]
         ]
         a [on.click (fun _ -> dispatch <| SetPage Dashboard)] [text "Sign in"]
-        br[]
-        span[][text "not a member yet?"]
+        br []
+        span [] [text "not a member yet?"]
         a [on.click (fun _ -> dispatch <| SetPage SignUp)] [text "Sign up"]
     ]
 
 let dashboardPage model dispatch =
-    div[attr.classes ["likes-list"]] [
+    div [attr.classes ["likes-list"]] [
         h3 [] [ text <| "Likes <| " + model.auth.signIn.username]
         //button [on.click (fun _ -> dispatch <| GetLikes model.signedInAs.Value)] [text "Reload"]
         button [on.click (fun _ -> dispatch (AuthMsg (Auth.SendSignOut)))] [text "Sign out"]
-        span[] [text model.dashboard.website.url]
-        span[] [text model.dashboard.website.title]
-        //ul[attr.classes ["like-list"] ] [
-        //    forEach model.pageState.dashboard.website <| fun l ->
-        //    li [][
-        //        span[][text <| l]
-        //        span[][text " - "]
-        //        a[attr.href l.url][text l.url]
-        //    ]
-        //]
+        span [] [text model.dashboard.website.url]
+        span [] [text model.dashboard.website.title]
+
+    ]
+let commentsPage (model:Model) dispatch =
+    div [] [
+        h2 [] [text model.comments.url]
+        ul [] [
+            forEach model.comments.comments <| fun c ->
+                li [] [text <| c.text + " - " + c.author]
+        ]
+        textarea [attr.``class`` "textarea"; bind.input.string model.comments.draft.text (dispatch << SetCommentText)] []
+        input [attr.``type`` "text"; bind.input.string model.comments.draft.author (dispatch << SetCommentAuthor)]
+        button [on.click (fun _ -> dispatch PostComment)] [text "post comment"]
     ]
 
 
@@ -138,6 +177,9 @@ let view model dispatch =
         
         | SignUp ->
             Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
+
+        | CommentsPage url ->
+            commentsPage model dispatch
         
         //notification
         div [attr.id "notification-area"] [

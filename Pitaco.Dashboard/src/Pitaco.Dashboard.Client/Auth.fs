@@ -16,7 +16,7 @@ type Model = {
 and SignInModel = {
     username: string
     password: string
-    signedInAs: option<string>
+    signedInAs: option<Website>
     signInFailed: bool
 }
 
@@ -49,9 +49,9 @@ type Msg =
     | SetSignUpPassword of string
     | SetSignUpPassword2 of string
     | GetSignedInAs
-    | RecvSignedInAs of string option
+    | RecvSignedInAs of Website option option
     | SendSignIn
-    | RecvSignIn of string option
+    | RecvSignIn of Website option
     | SendSignUp
     | RecvSignUp of string option
     | SendSignOut
@@ -84,14 +84,17 @@ let update remote message model =
         { model with signUp={ model.signUp with password2 = s}}, Cmd.none
 
     | GetSignedInAs ->
-        model, Cmd.OfAuthorized.either remote.getUsername () RecvSignedInAs Error
-    | RecvSignedInAs username ->
-        { model with signIn={ model.signIn with signedInAs = username }}, Cmd.none // onSignIn username
+        model, Cmd.OfAuthorized.either remote.getWebsite () RecvSignedInAs Error
+    | RecvSignedInAs website ->
+        let w = match website with
+                | None -> None
+                | Some x -> x
+        { model with signIn={ model.signIn with signedInAs = w }}, Cmd.none // onSignIn username
     
     | SendSignIn ->
         model, Cmd.OfAsync.either remote.signIn (model.signIn.username, model.signIn.password) RecvSignIn Error
-    | RecvSignIn username ->
-        { model with signIn={ model.signIn with signedInAs = username; signInFailed = Option.isNone username }}, Cmd.none // onSignIn username
+    | RecvSignIn website ->
+        { model with signIn={ model.signIn with signedInAs = website; signInFailed = Option.isNone website }}, Cmd.none // onSignIn username
     | SendSignOut ->
         model, Cmd.OfAsync.either remote.signOut () (fun () -> RecvSignOut) Error
     | RecvSignOut ->
@@ -113,7 +116,7 @@ let update remote message model =
 
 
 let signInPage model dispatch =
-    div[][
+    div [] [
         h1 [attr.classes ["title"]] [text "Sign in"]
         form [on.submit (fun _ -> dispatch SendSignIn)] [
             div [attr.classes ["field"]] [
@@ -132,7 +135,7 @@ let signInPage model dispatch =
 
 
 let signUpPage model dispatch =
-    div[][
+    div [] [
         h1 [attr.classes ["title"]] [text "Sign in"]
         form [on.submit (fun _ -> dispatch SendSignUp)] [
             div [attr.classes ["field"]] [

@@ -7,6 +7,12 @@ module Model =
         title: string
     }
 
+    and Comment = {
+        url: string
+        text: string
+        author: string
+    }
+
     and SignUpRequest = {
         title: string
         url: string
