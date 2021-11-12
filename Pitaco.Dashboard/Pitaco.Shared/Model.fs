@@ -3,12 +3,13 @@
 module Model =
 
     type Website = {
+        key: string
         url: string
         title: string
     }
 
     and Comment = {
-        url: string
+        wskey: string
         text: string
         author: string
     }

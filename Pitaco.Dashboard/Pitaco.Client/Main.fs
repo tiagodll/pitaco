@@ -8,6 +8,7 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
+open Microsoft.JSInterop
 open Pitaco.Shared.Model
 open Pitaco.Client.DashboardService
 
@@ -15,7 +16,7 @@ type Page =
     | [<EndPoint "/">] Homepage
     | [<EndPoint "/dashboard">] Dashboard
     | [<EndPoint "/signup">] SignUp
-    | [<EndPoint "/comments/{url}">] CommentsPage of url:string
+    | [<EndPoint "/comments/{wskey}">] CommentsPage of wskey:string
 
 
 type Model =
@@ -30,7 +31,7 @@ and DashboardState = {
     website: Website
 }
 and CommentsState = {
-    url: string
+    wskey: string
     comments: Comment list
     draft: Comment
 }
@@ -40,12 +41,12 @@ let initModel =
         page = Homepage
         error = None
         dashboard = {
-            website = { url=""; title="" }
+            website = { key=""; url=""; title="" }
         }
         comments = {
-            url = ""
+            wskey = ""
             comments = []
-            draft = {url=""; text=""; author=""}
+            draft = {wskey=""; text=""; author=""}
         }
         auth = Auth.init()
     }
@@ -69,26 +70,26 @@ let loadComments url remote =
 let postComment remote cmt =
     Cmd.OfAsync.either remote.addComment cmt CommentAdded Error
 
-let update remote message model =
+let update (js:IJSRuntime) remote message model =
     //let onSignIn = function
     //    | Some _ -> Cmd.ofMsg GetUrls
     //    | None -> Cmd.none
     match message with
     | SetPage page ->
         match page with
-        | CommentsPage url -> { model with page=page; comments = {model.comments with url = url}}, loadComments url remote
+        | CommentsPage wskey -> { model with page=page; comments = {model.comments with wskey = wskey}}, loadComments wskey remote
         | _ -> { model with page = page }, Cmd.none
 
     | CommentsLoaded comments ->
         {model with comments={model.comments with comments = comments}}, Cmd.none
     | PostComment ->
-        let cmt = {model.comments.draft with url=model.comments.url}
+        let cmt = {model.comments.draft with wskey=model.comments.wskey}
         model, postComment remote cmt
     | CommentAdded err ->
         match err with
         | None -> 
             let comments' = List.append model.comments.comments [model.comments.draft]
-            {model with comments={model.comments with comments=comments'; draft={url=""; text=""; author=""}}}, Cmd.none
+            {model with comments={model.comments with comments=comments'; draft={wskey=""; text=""; author=""}}}, Cmd.none
         | Some s ->
             {model with error = Some s}, Cmd.none
 
@@ -110,11 +111,17 @@ let update remote message model =
             match x with
             | None -> model, Cmd.ofMsg (SetPage Dashboard)
             | Some e -> 
-                let res', cmd' = Auth.update remote msg' model.auth
+                let res', cmd' = Auth.update js remote msg' model.auth
                 { model with auth = res' }, Cmd.map AuthMsg cmd'
                 //model, Cmd.ofMsg (SetPage Dashboard) // todo: not redirect when return error
+        | Auth.Msg.RecvSignedInAs x ->
+            js.InvokeVoidAsync("Log", {|ws=x|}).AsTask() |> ignore
+            match x with
+            | None -> model, Cmd.ofMsg (SetPage Dashboard)
+            | Some e ->
+                { model with auth={model.auth with signIn={ model.auth.signIn with signedInAs = e }}}, Cmd.none
         | _ -> 
-            let res', cmd' = Auth.update remote msg' model.auth
+            let res', cmd' = Auth.update js remote msg' model.auth
             { model with auth = res' }, Cmd.map AuthMsg cmd'
 
 
@@ -138,10 +145,9 @@ let homePage model dispatch =
         a [on.click (fun _ -> dispatch <| SetPage SignUp)] [text "Sign up"]
     ]
 
-let dashboardPage model dispatch =
+let dashboardPage model (user:Website) dispatch =
     div [attr.classes ["likes-list"]] [
-        h3 [] [ text <| "Likes <| " + model.auth.signIn.username]
-        //button [on.click (fun _ -> dispatch <| GetLikes model.signedInAs.Value)] [text "Reload"]
+        h3 [] [ text <| user.title + " - " + user.url]
         button [on.click (fun _ -> dispatch (AuthMsg (Auth.SendSignOut)))] [text "Sign out"]
         span [] [text model.dashboard.website.url]
         span [] [text model.dashboard.website.title]
@@ -149,7 +155,7 @@ let dashboardPage model dispatch =
     ]
 let commentsPage (model:Model) dispatch =
     div [] [
-        h2 [] [text model.comments.url]
+        h2 [] [text model.comments.wskey]
         ul [] [
             forEach model.comments.comments <| fun c ->
                 li [] [text <| c.text + " - " + c.author]
@@ -165,7 +171,7 @@ let header element =
             div [attr.classes ["navbar-brand"]] [
                 a [attr.classes ["navbar-item"; "has-text-weight-bold"; "is-size-5"]; attr.href "/"] [
 //                            img [attr.style "height:40px"; attr.src "https://github.com/fsbolero/website/raw/master/src/Website/img/wasm-fsharp.png"]
-                    text "  Bolero"
+                    text "  Pitaco"
                 ]
             ]
         ]
@@ -179,12 +185,12 @@ let view model dispatch =
         cond model.page <| function
         | Dashboard ->
             cond model.auth.signIn.signedInAs <| function
-                | Some _ -> header <| dashboardPage model dispatch
+                | Some user -> header <| dashboardPage model user dispatch
                 | None -> header <| Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
                 
         | Homepage ->
             cond model.auth.signIn.signedInAs <| function
-                | Some _ -> header <| dashboardPage model dispatch
+                | Some user -> header <| dashboardPage model user dispatch
                 | None -> homePage model dispatch
         
         | SignUp ->
@@ -214,8 +220,13 @@ type MyApp() =
 
     override this.Program =
         let dashboardService = this.Remote<DashboardService>()
-        let update = update dashboardService
-        Program.mkProgram (fun _ -> initModel, Cmd.ofMsg (AuthMsg Auth.GetSignedInAs)) update view
+        let update = update this.JSRuntime dashboardService
+        
+        let init _ = 
+            this.JSRuntime.InvokeVoidAsync("Log", {|ws="sign in"|}).AsTask() |> ignore
+            initModel, Cmd.ofMsg (AuthMsg Auth.GetSignedInAs)
+        
+        Program.mkProgram init update view
         |> Program.withRouter router
 #if DEBUG
         |> Program.withHotReload

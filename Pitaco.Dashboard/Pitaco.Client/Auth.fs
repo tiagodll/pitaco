@@ -3,6 +3,7 @@
 open Elmish
 open Bolero.Remoting
 open Bolero.Remoting.Client
+open Microsoft.JSInterop
 open Pitaco.Client.DashboardService
 open Bolero
 open Bolero.Html
@@ -67,7 +68,7 @@ let CreateId (n: string) =
   |> (fun a -> Array.append a [| r |])
   |> String.concat ""
 
-let update remote message model =
+let update (js:IJSRuntime) remote message model =
     match message with
     | SetUsername s ->
         { model with signIn={ model.signIn with username = s }}, Cmd.none
@@ -86,6 +87,7 @@ let update remote message model =
     | GetSignedInAs ->
         model, Cmd.OfAuthorized.either remote.getWebsite () RecvSignedInAs Error
     | RecvSignedInAs website ->
+        js.InvokeVoidAsync("Log", {|ws=website|}).AsTask() |> ignore
         let w = match website with
                 | None -> None
                 | Some x -> x
