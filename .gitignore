@@ -21,9 +21,11 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Visual Studio 2015/2017 cache/options directory
+# Visual Studio
 .vs/
-
+.idea/
+.vscode/
+.ionide/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -34,18 +36,10 @@ bld/
 TestResult.xml
 nunit-*.xml
 
-# Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
-dlldata.c
-
-
 # ReSharper is a .NET coding add-in
 _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
-
-
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
@@ -53,25 +47,12 @@ _ReSharper*/
 # but keep track of directories ending in .cache
 !?*.[Cc]ache/
 
-
-
-
 # Paket dependency manager
 .paket/paket.exe
 paket-files/
 
-
 # Azure Stream Analytics local run output
 ASALocalRun/
 
-# MSBuild Binary and Structured Log
-*.binlog
-
-
 # Local History for Visual Studio
 .localhistory/
-
-# Ionide (cross platform F# VS Code tools) working folder
-.ionide/
-
-.idea/
