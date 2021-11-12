@@ -11,14 +11,13 @@ open Bolero.Templating.Client
 open Pitaco.Shared.Model
 open Pitaco.Client.DashboardService
 
-/// Routing endpoints definition.
 type Page =
     | [<EndPoint "/">] Homepage
     | [<EndPoint "/dashboard">] Dashboard
     | [<EndPoint "/signup">] SignUp
     | [<EndPoint "/comments/{url}">] CommentsPage of url:string
 
-/// The Elmish application's model.
+
 type Model =
     {
         page: Page
@@ -160,23 +159,36 @@ let commentsPage (model:Model) dispatch =
         button [on.click (fun _ -> dispatch PostComment)] [text "post comment"]
     ]
 
+let header element =
+    div [] [
+        nav [attr.classes ["navbar"; "is-dark"]; "role" => "navigation"; attr.aria "label" "main navigation"] [
+            div [attr.classes ["navbar-brand"]] [
+                a [attr.classes ["navbar-item"; "has-text-weight-bold"; "is-size-5"]; attr.href "/"] [
+//                            img [attr.style "height:40px"; attr.src "https://github.com/fsbolero/website/raw/master/src/Website/img/wasm-fsharp.png"]
+                    text "  Bolero"
+                ]
+            ]
+        ]
+        element
+    ]
+
 
 let view model dispatch =
     section [] [
         // BODY
         cond model.page <| function
-        | Dashboard -> 
+        | Dashboard ->
             cond model.auth.signIn.signedInAs <| function
-                | Some _ -> dashboardPage model dispatch
-                | None -> Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
+                | Some _ -> header <| dashboardPage model dispatch
+                | None -> header <| Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
                 
         | Homepage ->
             cond model.auth.signIn.signedInAs <| function
-                | Some _ -> dashboardPage model dispatch
+                | Some _ -> header <| dashboardPage model dispatch
                 | None -> homePage model dispatch
         
         | SignUp ->
-            Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
+            header <| Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
 
         | CommentsPage url ->
             commentsPage model dispatch
