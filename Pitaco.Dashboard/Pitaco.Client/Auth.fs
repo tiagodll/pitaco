@@ -58,7 +58,6 @@ type Msg =
     | SendSignOut
     | RecvSignOut
     | Error of exn
-    | ClearError
 
 let CreateId (n: string) =
   let rand = System.Random()
@@ -111,9 +110,6 @@ let update (js:IJSRuntime) remote message model =
         { model with error = Some "You have been logged out."; signIn={ model.signIn with signedInAs = None }}, Cmd.none
     | Error exn ->
         { model with error = Some exn.Message }, Cmd.none
-    | ClearError ->
-        { model with error = None }, Cmd.none
-
 
 
 

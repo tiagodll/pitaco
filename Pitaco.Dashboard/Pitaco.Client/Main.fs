@@ -24,16 +24,11 @@ type Model =
         page: Page
         error: string option
         dashboard: DashboardState
-        comments: CommentsState
+        commentBox: CommentBox.Model
         auth: Auth.Model
     }
 and DashboardState = {
     website: Website
-}
-and CommentsState = {
-    wskey: string
-    comments: Comment list
-    draft: Comment
 }
 
 let initModel =
@@ -43,67 +38,36 @@ let initModel =
         dashboard = {
             website = { key=""; url=""; title="" }
         }
-        comments = {
-            wskey = ""
-            comments = []
-            draft = {wskey=""; text=""; author=""}
-        }
+        commentBox = CommentBox.init()
         auth = Auth.init()
     }
 
 /// The Elmish application's update messages.
 type Message =
     | SetPage of Page
-    //| GetComments of string
-    | CommentsLoaded of Comment list
-    | SetCommentText of string
-    | SetCommentAuthor of string
-    | PostComment
-    | CommentAdded of string option
     | Error of exn
     | ClearError
     | AuthMsg of Auth.Msg
+    | CommentBoxMsg of CommentBox.Msg
 
 
-let loadComments url remote =
-    Cmd.OfAsync.either remote.getComments (url) CommentsLoaded Error
-let postComment remote cmt =
-    Cmd.OfAsync.either remote.addComment cmt CommentAdded Error
+
 
 let update (js:IJSRuntime) remote message model =
-    //let onSignIn = function
-    //    | Some _ -> Cmd.ofMsg GetUrls
-    //    | None -> Cmd.none
     match message with
     | SetPage page ->
         match page with
-        | CommentsPage wskey -> { model with page=page; comments = {model.comments with wskey = wskey}}, loadComments wskey remote
+        | CommentsPage wskey -> { model with page=page; commentBox = {model.commentBox with wskey = wskey}}, Cmd.none // CommentBox.loadComments wskey remote
         | _ -> { model with page = page }, Cmd.none
 
-    | CommentsLoaded comments ->
-        {model with comments={model.comments with comments = comments}}, Cmd.none
-    | PostComment ->
-        let cmt = {model.comments.draft with wskey=model.comments.wskey}
-        model, postComment remote cmt
-    | CommentAdded err ->
-        match err with
-        | None -> 
-            let comments' = List.append model.comments.comments [model.comments.draft]
-            {model with comments={model.comments with comments=comments'; draft={wskey=""; text=""; author=""}}}, Cmd.none
-        | Some s ->
-            {model with error = Some s}, Cmd.none
-
-    | SetCommentText text ->
-        {model with comments={model.comments with draft={model.comments.draft with text=text}}}, Cmd.none
-    | SetCommentAuthor text ->
-        {model with comments={model.comments with draft={model.comments.draft with author=text}}}, Cmd.none
-
-    | Error RemoteUnauthorizedException ->
-        { model with error = Some "You have been logged out."; auth={ model.auth with signIn={ model.auth.signIn with signedInAs = None }}}, Cmd.none
     | Error exn ->
         { model with error = Some exn.Message }, Cmd.none
+    
     | ClearError ->
-        { model with error = None }, Cmd.none
+        { model with 
+            error = None; 
+            auth = {model.auth with error = None}; 
+            commentBox = {model.commentBox with error = None}}, Cmd.none
 
     | AuthMsg msg' ->
         match msg' with
@@ -113,16 +77,14 @@ let update (js:IJSRuntime) remote message model =
             | Some e -> 
                 let res', cmd' = Auth.update js remote msg' model.auth
                 { model with auth = res' }, Cmd.map AuthMsg cmd'
-                //model, Cmd.ofMsg (SetPage Dashboard) // todo: not redirect when return error
-        | Auth.Msg.RecvSignedInAs x ->
-            js.InvokeVoidAsync("Log", {|ws=x|}).AsTask() |> ignore
-            match x with
-            | None -> model, Cmd.ofMsg (SetPage Dashboard)
-            | Some e ->
-                { model with auth={model.auth with signIn={ model.auth.signIn with signedInAs = e }}}, Cmd.none
+
         | _ -> 
             let res', cmd' = Auth.update js remote msg' model.auth
             { model with auth = res' }, Cmd.map AuthMsg cmd'
+            
+    | CommentBoxMsg msg' ->
+        let res', cmd' = CommentBox.update js remote msg' model.commentBox
+        { model with commentBox = res' }, Cmd.map CommentBoxMsg cmd'
 
 
 let router = Router.infer SetPage (fun model -> model.page)
@@ -152,17 +114,6 @@ let dashboardPage model (user:Website) dispatch =
         span [] [text model.dashboard.website.url]
         span [] [text model.dashboard.website.title]
 
-    ]
-let commentsPage (model:Model) dispatch =
-    div [] [
-        h2 [] [text model.comments.wskey]
-        ul [] [
-            forEach model.comments.comments <| fun c ->
-                li [] [text <| c.text + " - " + c.author]
-        ]
-        textarea [attr.``class`` "textarea"; bind.input.string model.comments.draft.text (dispatch << SetCommentText)] []
-        input [attr.``type`` "text"; bind.input.string model.comments.draft.author (dispatch << SetCommentAuthor)]
-        button [on.click (fun _ -> dispatch PostComment)] [text "post comment"]
     ]
 
 let header element =
@@ -197,7 +148,7 @@ let view model dispatch =
             header <| Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
 
         | CommentsPage url ->
-            commentsPage model dispatch
+            CommentBox.commentsPage model.commentBox (fun x -> dispatch (CommentBoxMsg x))
         
         //notification
         div [attr.id "notification-area"] [
@@ -207,11 +158,15 @@ let view model dispatch =
 
             match model.auth.error with
             | None -> empty
-            | Some err -> errorNotification err (fun _ -> dispatch (AuthMsg Auth.ClearError))
+            | Some err -> errorNotification err (fun _ -> dispatch ClearError)
+
+            match model.commentBox.error with
+            | None -> empty
+            | Some err -> errorNotification err (fun _ -> dispatch ClearError)
 
             match model.auth.signIn.signInFailed with
             | false -> empty
-            | true -> errorNotification "Sign in failed. Use any username and the password \"password\"."  (fun _ -> dispatch (AuthMsg Auth.ClearError))
+            | true -> errorNotification "Sign in failed. Use any username and the password \"password\"."  (fun _ -> dispatch ClearError)
         ]
     ]
 
