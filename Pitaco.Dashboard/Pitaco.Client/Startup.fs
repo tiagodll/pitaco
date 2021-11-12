@@ -1,4 +1,4 @@
-namespace Pitaco.Dashboard.Client
+namespace Pitaco.Client
 
 open Microsoft.AspNetCore.Components.WebAssembly.Hosting
 open Bolero.Remoting.Client

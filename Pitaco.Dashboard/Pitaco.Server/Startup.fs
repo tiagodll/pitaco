@@ -1,4 +1,4 @@
-namespace Pitaco.Dashboard.Server
+namespace Pitaco.Server
 
 open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Authentication.Cookies
@@ -8,8 +8,8 @@ open Microsoft.Extensions.DependencyInjection
 open Bolero
 open Bolero.Remoting.Server
 open Bolero.Server
-open Pitaco.Dashboard
 open Bolero.Templating.Server
+open Pitaco
 
 type Startup() =
 
@@ -26,7 +26,7 @@ type Startup() =
             .AddRemoting<DashboardService>()
             .AddBoleroHost()
 #if DEBUG
-            .AddHotReload(templateDir = __SOURCE_DIRECTORY__ + "/../Pitaco.Dashboard.Client")
+            .AddHotReload(templateDir = __SOURCE_DIRECTORY__ + "/../Pitaco.Client")
 #endif
         |> ignore
 

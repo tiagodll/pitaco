@@ -1,4 +1,4 @@
-﻿module Pitaco.Dashboard.Client.DashboardService
+﻿module Pitaco.Client.DashboardService
 
 open Pitaco.Shared.Model
 open Bolero.Remoting

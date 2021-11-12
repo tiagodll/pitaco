@@ -1,9 +1,9 @@
-module Pitaco.Dashboard.Server.Index
+module Pitaco.Server.Index
 
 open Bolero
 open Bolero.Html
 open Bolero.Server.Html
-open Pitaco.Dashboard
+open Pitaco
 
 let page = doctypeHtml [] [
     head [] [

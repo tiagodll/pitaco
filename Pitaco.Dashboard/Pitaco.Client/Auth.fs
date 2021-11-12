@@ -1,9 +1,9 @@
-﻿module Pitaco.Dashboard.Client.Auth
+﻿module Pitaco.Client.Auth
 
 open Elmish
 open Bolero.Remoting
 open Bolero.Remoting.Client
-open Pitaco.Dashboard.Client.DashboardService
+open Pitaco.Client.DashboardService
 open Bolero
 open Bolero.Html
 open Pitaco.Shared.Model

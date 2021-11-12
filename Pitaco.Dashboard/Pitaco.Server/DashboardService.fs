@@ -1,11 +1,11 @@
-namespace Pitaco.Dashboard.Server
+namespace Pitaco.Server
 
 open System
 open Microsoft.AspNetCore.Hosting
 open Bolero.Remoting
 open Bolero.Remoting.Server
 
-open Pitaco.Dashboard
+open Pitaco
 open Pitaco.Shared.Model
 
 type DbUser = { 
@@ -13,11 +13,6 @@ type DbUser = {
     title: string
     password: string 
 }
-//type DbComment = {
-//    url: string
-//    comment: string
-//    author: string
-//}
 
 module DashboardServiceHelper =
     let DbUserToWebsite user = {title=user.title; url=user.url}

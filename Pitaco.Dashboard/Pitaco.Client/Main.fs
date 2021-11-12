@@ -1,4 +1,4 @@
-module Pitaco.Dashboard.Client.Main
+module Pitaco.Client.Main
 
 open System
 open Elmish
@@ -9,7 +9,7 @@ open Bolero.Remoting.Client
 open Bolero.Templating.Client
 
 open Pitaco.Shared.Model
-open Pitaco.Dashboard.Client.DashboardService
+open Pitaco.Client.DashboardService
 
 /// Routing endpoints definition.
 type Page =

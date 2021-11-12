@@ -17,6 +17,6 @@
     <PackageReference Include="System.Net.Http.Json" Version="5.0.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Pitaco.Shared\Pitaco.Shared.fsproj" />
+    <ProjectReference Include="..\Pitaco.Shared\Pitaco.Shared.fsproj" />
   </ItemGroup>
 </Project>
