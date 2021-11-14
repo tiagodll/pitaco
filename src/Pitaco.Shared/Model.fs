@@ -10,6 +10,7 @@ module Model =
 
     and Comment = {
         wskey: string
+        url: string
         text: string
         author: string
     }

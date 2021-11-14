@@ -3,7 +3,6 @@
 open Pitaco.Shared.Model
 open Bolero.Remoting
 
-/// Remote service definition.
 type DashboardService =
     {
         getWebsite: unit -> Async<Website option>

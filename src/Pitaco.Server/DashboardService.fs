@@ -21,8 +21,9 @@ module DashboardServiceHelper =
 type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<Client.DashboardService.DashboardService>()
 
-    let mutable users = [{key="tiagodallignacom"; url="tiago.dalligna.com"; title="cyborg"; password="asd"}]
-    let mutable comments = [{wskey="tiagodallignacom"; text="this is the best website ever!!!"; author="honest person"}]
+    let mutable users = [{key="tiagodallignacom"; url="tiago.dalligna.com"; title="cyborg"; password="asd"};
+                         {key="test"; url="localhost:5001"; title="the test website"; password="asd"}]
+    let mutable comments = [{wskey="tiagodallignacom"; url="tiago.dalligna.com"; text="this is the best website ever!!!"; author="honest person"}]
 
     override this.Handler =
         {
@@ -52,7 +53,7 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             }
 
             signUp = fun (signUpRequest) -> async {
-//                let key = String. signUpRequest.url
+                // let key = String. signUpRequest.url
                 let makeKey url =
                     String.filter (fun x -> x <> '.' && x <> '/') url
                     

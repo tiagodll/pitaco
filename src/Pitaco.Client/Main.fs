@@ -1,6 +1,5 @@
 module Pitaco.Client.Main
 
-open System
 open Elmish
 open Bolero
 open Bolero.Html

@@ -5,7 +5,6 @@ open Bolero.Remoting
 open Bolero.Remoting.Client
 open Microsoft.JSInterop
 open Pitaco.Client.DashboardService
-open Bolero
 open Bolero.Html
 open Pitaco.Shared.Model
 
