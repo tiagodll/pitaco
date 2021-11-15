@@ -22,21 +22,16 @@ type Model =
     {
         page: Page
         error: string option
-        dashboard: DashboardState
+        dashboard: Dashboard.Model
         commentBox: CommentBox.Model
         auth: Auth.Model
     }
-and DashboardState = {
-    website: Website
-}
 
 let initModel =
     {
         page = Homepage
         error = None
-        dashboard = {
-            website = { key=""; url=""; title="" }
-        }
+        dashboard = Dashboard.init()
         commentBox = CommentBox.init()
         auth = Auth.init()
     }
@@ -48,9 +43,7 @@ type Message =
     | ClearError
     | AuthMsg of Auth.Msg
     | CommentBoxMsg of CommentBox.Msg
-
-
-
+    | DashboardMsg of Dashboard.Msg
 
 let update (js:IJSRuntime) remote message model =
     match message with
@@ -76,7 +69,16 @@ let update (js:IJSRuntime) remote message model =
             | Some e -> 
                 let res', cmd' = Auth.update js remote msg' model.auth
                 { model with auth = res' }, Cmd.map AuthMsg cmd'
-
+        | Auth.Msg.RecvSignedInAs resp ->
+            let res', cmd' = Auth.update js remote msg' model.auth
+            let key = match resp with
+                        | None -> ""
+                        | Some r1 -> match r1 with
+                                        | None -> ""
+                                        | Some r2 -> r2.key
+                                        
+            let cmdD' = Dashboard.loadPages key remote            
+            { model with auth = res' }, Cmd.batch [Cmd.map AuthMsg cmd'; Cmd.map DashboardMsg cmdD']
         | _ -> 
             let res', cmd' = Auth.update js remote msg' model.auth
             { model with auth = res' }, Cmd.map AuthMsg cmd'
@@ -84,6 +86,10 @@ let update (js:IJSRuntime) remote message model =
     | CommentBoxMsg msg' ->
         let res', cmd' = CommentBox.update js remote msg' model.commentBox
         { model with commentBox = res' }, Cmd.map CommentBoxMsg cmd'
+        
+    | DashboardMsg msg' ->
+        let res', cmd' = Dashboard.update js remote msg' model.dashboard
+        { model with dashboard = res' }, Cmd.map DashboardMsg cmd'
 
 
 let router = Router.infer SetPage (fun model -> model.page)
@@ -106,16 +112,7 @@ let homePage model dispatch =
         a [on.click (fun _ -> dispatch <| SetPage SignUp)] [text "Sign up"]
     ]
 
-let dashboardPage model (user:Website) dispatch =
-    div [attr.classes ["likes-list"]] [
-        h3 [] [ text <| user.title + " - " + user.url]
-        button [on.click (fun _ -> dispatch (AuthMsg (Auth.SendSignOut)))] [text "Sign out"]
-        span [] [text model.dashboard.website.url]
-        span [] [text model.dashboard.website.title]
-
-    ]
-
-let header element =
+let header model dispatch element =
     div [] [
         nav [attr.classes ["navbar"; "is-dark"]; "role" => "navigation"; attr.aria "label" "main navigation"] [
             div [attr.classes ["navbar-brand"]] [
@@ -123,6 +120,16 @@ let header element =
                     img [attr.style "height:40px"; attr.src "/img/logo.png"]
                     text "  Pitaco"
                 ]
+                cond model.auth.signIn.signedInAs <| function
+                | Some user ->
+                    div [] [
+                        h3 [] [ text <| user.title + " - " + user.url]
+                        button [on.click (fun _ -> dispatch (AuthMsg (Auth.SendSignOut)))] [text "Sign out"]
+                    ]
+                | None ->
+                    div [] [
+                        text "no user"
+                    ]
             ]
         ]
         element
@@ -135,16 +142,16 @@ let view model dispatch =
         cond model.page <| function
         | Dashboard ->
             cond model.auth.signIn.signedInAs <| function
-                | Some user -> header <| dashboardPage model user dispatch
-                | None -> header <| Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
+                | Some user -> header model dispatch (Dashboard.dashboardPage model.dashboard user dispatch)
+                | None -> header model dispatch <| Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
                 
         | Homepage ->
             cond model.auth.signIn.signedInAs <| function
-                | Some user -> header <| dashboardPage model user dispatch
+                | Some user -> header model dispatch <| Dashboard.dashboardPage model.dashboard user dispatch
                 | None -> homePage model dispatch
         
         | SignUp ->
-            header <| Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
+            header model dispatch <| Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
 
         | CommentsPage url ->
             CommentBox.commentsPage model.commentBox (fun x -> dispatch (CommentBoxMsg x))

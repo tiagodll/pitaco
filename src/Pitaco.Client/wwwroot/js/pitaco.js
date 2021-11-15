@@ -11,7 +11,7 @@ let pitaco = (id) => {
         xhr.setRequestHeader('Content-type', 'application/json')
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.overrideMimeType("text/html");
-        xhr.send(`"${id}"`)
+        xhr.send(`"${document.location.href}"`)
         xhr.onreadystatechange = function() {
             if(xhr.readyState === 4 && xhr.status === 200) {
                 let resp = "";
@@ -30,7 +30,7 @@ let pitaco = (id) => {
         client.overrideMimeType('text/html')
         client.send(JSON.stringify({
             wskey: id,
-            url: "localhost:5001",
+            url: document.location.href,
             text: document.getElementById("pitaco_comment").value,
             author: document.getElementById("pitaco_author").value
         }));

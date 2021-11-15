@@ -11,6 +11,7 @@ type DashboardService =
         signUp : SignUpRequest -> Async<string option>
         getComments: string -> Async<Comment list>
         addComment: Comment -> Async<string option>
+        getPagesWithComments: string -> Async<WsPage list>
     }
 
     interface IRemoteService with

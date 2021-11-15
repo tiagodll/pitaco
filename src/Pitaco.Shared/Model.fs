@@ -14,6 +14,11 @@ module Model =
         text: string
         author: string
     }
+    and WsPage = {
+        wskey: string
+        url: string
+        comments: Comment list
+    }
 
     and SignUpRequest = {
         title: string
@@ -22,3 +27,10 @@ module Model =
         password2: string
         signUpDone: bool
     }
+    
+    and SignInResponse = {
+        website: Website
+        comments: Comment list
+    }
+   
+   

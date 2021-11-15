@@ -66,8 +66,19 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                 return None
             }
 
-            getComments = fun (id) -> async {
+            getComments = fun (url) -> async {
                 return comments
-                |> List.filter (fun x -> x.wskey = id)
+                |> List.filter (fun x -> x.url = url)
+            }
+            
+            getPagesWithComments = fun (key) -> async {
+                return comments
+                |> List.filter (fun x -> x.wskey = key)
+                |> List.distinctBy (fun x -> x.url)
+                |> List.map (fun x -> {
+                    wskey = x.wskey
+                    url = x.url
+                    comments = comments |> List.filter (fun y -> y.url = x.url)
+                })
             }
         }

@@ -85,7 +85,6 @@ let update (js:IJSRuntime) remote message model =
     | GetSignedInAs ->
         model, Cmd.OfAuthorized.either remote.getWebsite () RecvSignedInAs Error
     | RecvSignedInAs website ->
-        js.InvokeVoidAsync("Log", {|ws=website|}).AsTask() |> ignore
         let w = match website with
                 | None -> None
                 | Some x -> x
