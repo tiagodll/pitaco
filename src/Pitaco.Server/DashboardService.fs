@@ -62,7 +62,7 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             }
 
             addComment = fun (comment) -> async {
-                comments <- List.append [{ wskey=comment.wskey; text=comment.text; author=comment.author}] comments
+                comments <- List.append [{ wskey=comment.wskey; url=comment.url; text=comment.text; author=comment.author}] comments
                 return None
             }
 
