@@ -120,7 +120,7 @@ let header element =
         nav [attr.classes ["navbar"; "is-dark"]; "role" => "navigation"; attr.aria "label" "main navigation"] [
             div [attr.classes ["navbar-brand"]] [
                 a [attr.classes ["navbar-item"; "has-text-weight-bold"; "is-size-5"]; attr.href "/"] [
-//                            img [attr.style "height:40px"; attr.src "https://github.com/fsbolero/website/raw/master/src/Website/img/wasm-fsharp.png"]
+                    img [attr.style "height:40px"; attr.src "/img/logo.png"]
                     text "  Pitaco"
                 ]
             ]
