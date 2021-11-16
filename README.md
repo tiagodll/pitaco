@@ -11,6 +11,7 @@ this is a study app, not to be used in prod
 - Azure storage tables # database
 - Azure storage queue # to implement event sourcing
 - Azure functions # api
+- auth b2c
 
 # TODO:
 - create function to add and get comments
