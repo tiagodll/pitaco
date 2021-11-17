@@ -12,9 +12,9 @@ open Bolero.Templating.Server
 type Startup() =
 
     member this.ConfigureServices(services: IServiceCollection) =
-        services.AddCors(fun options -> options.AddPolicy("CorsPolicy", fun policy ->
-            policy.AllowAnyMethod().AllowCredentials().AllowAnyHeader().SetIsOriginAllowed(fun x -> true) |> ignore
-        )) |> ignore
+        // services.AddCors(fun options -> options.AddPolicy("CorsPolicy", fun policy ->
+        //     policy.AllowAnyMethod().AllowCredentials().AllowAnyHeader().SetIsOriginAllowed(fun x -> true) |> ignore
+        // )) |> ignore
         services.AddMvc() |> ignore
         services.AddServerSideBlazor() |> ignore
         services
@@ -31,7 +31,7 @@ type Startup() =
 
     member this.Configure(app: IApplicationBuilder, env: IWebHostEnvironment) =
         app
-            .UseCors("CorsPolicy")
+            // .UseCors("CorsPolicy")
             .UseAuthentication()
             .UseRemoting()
             .UseStaticFiles()
