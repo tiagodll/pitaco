@@ -12,16 +12,18 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=pitaco;AccountKey=I+UfwKCn8oX7drOOZXW/e7+D+zISgd0WqX79yRX80YnIEMwK1r0A6NPmEqjLUkFSxascbRYRyxys6kzOBh3gjw==;EndpointSuffix=core.windows.net"
       }
     },
     "Pitaco.Dashboard.Server": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=pitaco;AccountKey=I+UfwKCn8oX7drOOZXW/e7+D+zISgd0WqX79yRX80YnIEMwK1r0A6NPmEqjLUkFSxascbRYRyxys6kzOBh3gjw==;EndpointSuffix=core.windows.net"
       },
-      "applicationUrl": "https://localhost:5001;http://localhost:5000"
+      "applicationUrl": "https://localhost:55001;http://localhost:55000"
     }
   }
 }

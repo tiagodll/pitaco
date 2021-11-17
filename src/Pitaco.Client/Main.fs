@@ -46,6 +46,7 @@ type Message =
     | DashboardMsg of Dashboard.Msg
 
 let update (js:IJSRuntime) remote message model =
+    js.InvokeVoidAsync("Log", ["## " + message.ToString() + " ###"]).AsTask() |> ignore
     match message with
     | SetPage page ->
         match page with

@@ -1,5 +1,7 @@
 ﻿namespace Pitaco.Shared
 
+open System
+
 module Model =
 
     type Website = {
@@ -10,9 +12,11 @@ module Model =
 
     and Comment = {
         wskey: string
+        key: string
         url: string
         text: string
         author: string
+        timestamp: DateTime
     }
     and WsPage = {
         wskey: string

@@ -1,5 +1,6 @@
 ﻿module Pitaco.Client.CommentBox
 
+open System
 open Elmish
 open Bolero.Remoting.Client
 open Microsoft.JSInterop
@@ -19,7 +20,7 @@ let init() =
   {
     wskey = ""
     comments = []
-    draft = {wskey=""; url=""; text=""; author=""}
+    draft = {wskey=""; key=""; url=""; timestamp=DateTime.MinValue; text=""; author=""}
     error = None
   }
 
@@ -64,7 +65,7 @@ let update (js:IJSRuntime) remote message model =
         match err with
         | None -> 
             let comments' = List.append model.comments [model.draft]
-            {model with comments=comments'; draft={wskey=""; url=""; text=""; author=""}}, Cmd.none
+            {model with comments=comments'; draft={wskey=""; key=""; timestamp=DateTime.MinValue; url=""; text=""; author=""}}, Cmd.none
         | Some s ->
             {model with error = Some s}, Cmd.none
 
