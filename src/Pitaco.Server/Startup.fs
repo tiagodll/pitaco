@@ -13,7 +13,7 @@ type Startup() =
 
     member this.ConfigureServices(services: IServiceCollection) =
         services.AddCors(fun options -> options.AddPolicy("CorsPolicy", fun policy ->
-            policy.AllowAnyMethod().AllowCredentials().AllowAnyHeader().AllowCredentials().SetIsOriginAllowed(fun x -> true) |> ignore
+            policy.AllowAnyMethod().AllowCredentials().AllowAnyHeader().SetIsOriginAllowed(fun x -> true) |> ignore
         )) |> ignore
         services.AddMvc() |> ignore
         services.AddServerSideBlazor() |> ignore

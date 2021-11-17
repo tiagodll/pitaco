@@ -26,6 +26,8 @@ bld/
 .idea/
 .vscode/
 .ionide/
+publish/
+pub/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
