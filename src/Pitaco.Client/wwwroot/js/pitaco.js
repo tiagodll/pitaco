@@ -7,7 +7,7 @@ function pitaco(id) {
 
     let loadComments = () => {
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://pitaco-webapp.azurewebsites.net/api/getComments");
+        xhr.open("POST", "https://pitacofunctionapi.azurewebsites.net/api/getComments");
         xhr.setRequestHeader('Content-type', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.overrideMimeType("text/html");
@@ -24,7 +24,7 @@ function pitaco(id) {
 
     let postComment = () => {
         let client = new XMLHttpRequest();
-        client.open("POST", "https://pitaco-webapp.azurewebsites.net/api/addComment");
+        client.open("POST", "https://pitacofunctionapi.azurewebsites.net/api/addComment");
         client.setRequestHeader('Content-type', 'application/json');
         client.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         client.overrideMimeType('text/html');

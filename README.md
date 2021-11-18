@@ -5,21 +5,22 @@ this is a study app, not to be used in prod
 
 # study points:
 
-- F# / bolero (blazor)
-- unit testing in F#
-- Azure storage # static page for testing the app
-- Azure storage tables # database
-- Azure storage queue # to implement event sourcing
-- Azure functions # api
-- auth b2c
+- [x] F# / bolero (blazor)
+- [x] HTML in blob storage
+- [ ] unit testing in F#
+- [x] Azure storage # static page for testing the app
+- [x] Azure storage tables # database
+- [x] Azure storage queue # to implement event sourcing
+- [x] Azure functions # api
+- [ ] auth b2c
 
 # TODO:
-- create function to add and get comments
-- change javascript html to load and post to the function
-- make a container
-- deploy the app to container
-- deploy the function to azure functions
-- deploy the javascript html to blob storage
+- [x] create function to add and get comments
+- [x] change javascript html to load and post to the function
+- [ ] make a container
+- [ ] deploy the app to container
+- [x] deploy the function to azure functions
+- [x] deploy the javascript html to blob storage
 - ?
 
 

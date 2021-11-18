@@ -8,13 +8,13 @@ content-type: application/json
 
 ############################
 
-POST https://localhost:55001/api/addComment HTTP/1.1
+POST https://pitacofunctionapi.azurewebsites.net/api/addcomment HTTP/1.1
 content-type: application/json
 
 {
     "wskey": "tiagodallignacom",
     "url": "https://pitaco.blob.core.windows.net/pitaco-jsclient/javascriptTest.html",
-    "text": "the test comment",
+    "text": "12345",
     "author": "the test author",
     "key": "1",
     "timestamp": "2021-01-01"
