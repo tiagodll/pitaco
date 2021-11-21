@@ -101,6 +101,7 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     override this.Handler =
         {
             getWebsite = ctx.Authorize <| fun () -> async {
+                Console.WriteLine($"RowKey eq '{ctx.HttpContext.User.Identity.Name}'") |> ignore
                 return $"RowKey eq '{ctx.HttpContext.User.Identity.Name}'"
                 |> tableWebsites.Query<DbWebsite>
                 |> Enumerable.ToArray
@@ -109,11 +110,16 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             }
 
             signIn = fun (url, password) -> async {
-                return $"Url eq '{url}' and Password eq '{password}'"
-                |> tableWebsites.Query<DbWebsite>
-                |> Enumerable.ToArray
-                |> Array.map DashboardServiceHelper.DbWebsiteToWebsite
-                |> Array.tryHead
+                let user = $"Url eq '{url}' and Password eq '{password}'"
+                            |> tableWebsites.Query<DbWebsite>
+                            |> Enumerable.ToArray
+                            |> Array.map DashboardServiceHelper.DbWebsiteToWebsite
+                            |> Array.tryHead
+                match user with
+                | None -> return None
+                | Some u ->
+                    do! ctx.HttpContext.AsyncSignIn(u.key, TimeSpan.FromDays(365.))
+                    return Some u
             }
 
             signOut = fun () -> async {
