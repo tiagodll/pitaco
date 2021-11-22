@@ -56,4 +56,4 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6F5B9737F34E45AFB29377AC1069858E }}
           package: .
         env:
-          CONNECTION_STRING: 'DefaultEndpointsProtocol=https;AccountName=pitaco;AccountKey=I+UfwKCn8oX7drOOZXW/e7+D+zISgd0WqX79yRX80YnIEMwK1r0A6NPmEqjLUkFSxascbRYRyxys6kzOBh3gjw==;EndpointSuffix=core.windows.net'
+          CONNECTION_STRING: 'DefaultEndpointsProtocol=https;AccountName=tabber;AccountKey=whcgLxTeJaqjU6XrWqwDBquuHYOuwOCG3Wme49nsGPTwnuekcYQtuxgLuZNCD6QG5sAs8ZP+/JNHWf0CTbg2og==;EndpointSuffix=core.windows.net'
