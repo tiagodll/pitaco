@@ -23,7 +23,7 @@ type Model =
         page: Page
         error: string option
         dashboard: Dashboard.Model
-        commentBox: CommentBox.Model
+//        commentBox: CommentBox.Model
         auth: Auth.Model
     }
 
@@ -32,7 +32,7 @@ let initModel =
         page = Homepage
         error = None
         dashboard = Dashboard.init()
-        commentBox = CommentBox.init()
+//        commentBox = CommentBox.init()
         auth = Auth.init()
     }
 
@@ -42,7 +42,7 @@ type Message =
     | Error of exn
     | ClearError
     | AuthMsg of Auth.Msg
-    | CommentBoxMsg of CommentBox.Msg
+//    | CommentBoxMsg of CommentBox.Msg
     | DashboardMsg of Dashboard.Msg
 
 let update (js:IJSRuntime) remote message model =
@@ -50,7 +50,7 @@ let update (js:IJSRuntime) remote message model =
     match message with
     | SetPage page ->
         match page with
-        | CommentsPage wskey -> { model with page=page; commentBox = {model.commentBox with wskey = wskey}}, Cmd.none // CommentBox.loadComments wskey remote
+//        | CommentsPage wskey -> { model with page=page; commentBox = {model.commentBox with wskey = wskey}}, Cmd.none // CommentBox.loadComments wskey remote
         | _ -> { model with page = page }, Cmd.none
 
     | Error exn ->
@@ -59,8 +59,9 @@ let update (js:IJSRuntime) remote message model =
     | ClearError ->
         { model with 
             error = None; 
-            auth = {model.auth with error = None}; 
-            commentBox = {model.commentBox with error = None}}, Cmd.none
+            auth = {model.auth with error = None}
+        }, Cmd.none
+//            ;commentBox = {model.commentBox with error = None}}, Cmd.none
 
     | AuthMsg msg' ->
         match msg' with
@@ -84,9 +85,9 @@ let update (js:IJSRuntime) remote message model =
             let res', cmd' = Auth.update js remote msg' model.auth
             { model with auth = res' }, Cmd.map AuthMsg cmd'
             
-    | CommentBoxMsg msg' ->
-        let res', cmd' = CommentBox.update js remote msg' model.commentBox
-        { model with commentBox = res' }, Cmd.map CommentBoxMsg cmd'
+//    | CommentBoxMsg msg' ->
+//        let res', cmd' = CommentBox.update js remote msg' model.commentBox
+//        { model with commentBox = res' }, Cmd.map CommentBoxMsg cmd'
         
     | DashboardMsg msg' ->
         let res', cmd' = Dashboard.update js remote msg' model.dashboard
@@ -154,8 +155,8 @@ let view model dispatch =
         | SignUp ->
             header model dispatch <| Auth.signUpPage model.auth (fun x -> dispatch (AuthMsg x))
 
-        | CommentsPage url ->
-            CommentBox.commentsPage model.commentBox (fun x -> dispatch (CommentBoxMsg x))
+//        | CommentsPage url ->
+//            CommentBox.commentsPage model.commentBox (fun x -> dispatch (CommentBoxMsg x))
         
         //notification
         div [attr.id "notification-area"] [
@@ -167,9 +168,9 @@ let view model dispatch =
             | None -> empty
             | Some err -> errorNotification err (fun _ -> dispatch ClearError)
 
-            match model.commentBox.error with
-            | None -> empty
-            | Some err -> errorNotification err (fun _ -> dispatch ClearError)
+//            match model.commentBox.error with
+//            | None -> empty
+//            | Some err -> errorNotification err (fun _ -> dispatch ClearError)
 
             match model.auth.signIn.signInFailed with
             | false -> empty

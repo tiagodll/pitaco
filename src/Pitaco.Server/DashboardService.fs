@@ -1,122 +1,28 @@
 namespace Pitaco.Server
 
 open System
-open System.Linq
 open Microsoft.AspNetCore.Hosting
 open Bolero.Remoting
 open Bolero.Remoting.Server
-open Azure.Data.Tables
-open Azure
 
 open Pitaco
+open Pitaco.Database
+open Pitaco.Database.Types
 open Pitaco.Shared.Model
-
-type DbWebsite(partitionkey, rowkey, timestamp, Url, Title, Password) =
-    interface ITableEntity with
-        member this.ETag
-            with get (): ETag = 
-                raise (System.NotImplementedException())
-            and set (v: ETag): unit = 
-                raise (System.NotImplementedException())
-        member this.PartitionKey
-            with get (): string = partitionkey
-            and set (v: string): unit = 
-                raise (System.NotImplementedException())
-        member this.RowKey
-            with get (): string = rowkey
-            and set (v: string): unit = 
-                raise (System.NotImplementedException())
-        member this.Timestamp
-            with get (): Nullable<DateTimeOffset> = 
-                raise (System.NotImplementedException())
-            and set (v: Nullable<DateTimeOffset>): unit = 
-                raise (System.NotImplementedException())
-    new() = DbWebsite(null, null, null, null, null, null)
-    member val Url = Url with get, set
-    member val Title = Title with get, set
-    member val Password = Password with get, set
-    member val Timestamp = timestamp with get, set
-    member val PartitionKey = partitionkey with get, set
-    member val RowKey = rowkey with get, set
-    
-type DbComment(partitionkey, rowkey, Url, Text, Author) =
-    interface ITableEntity with
-        member this.ETag
-            with get (): ETag = 
-                raise (System.NotImplementedException())
-            and set (v: ETag): unit = 
-                raise (System.NotImplementedException())
-        member this.PartitionKey
-            with get (): string = partitionkey
-            and set (v: string): unit = 
-                raise (System.NotImplementedException())
-        member this.RowKey
-            with get (): string = rowkey
-            and set (v: string): unit = 
-                raise (System.NotImplementedException())
-        member this.Timestamp
-            with get (): Nullable<DateTimeOffset> = 
-                raise (System.NotImplementedException())
-            and set (v: Nullable<DateTimeOffset>): unit = 
-                raise (System.NotImplementedException())
-    new() = DbComment(null, null, null, null, null)
-    member val Url = Url with get, set
-    member val Text = Text with get, set
-    member val Author = Author with get, set
-    member val PartitionKey = partitionkey with get, set
-    member val RowKey = rowkey with get, set
-
-module DashboardServiceHelper =
-    let DbWebsitePartition = "websites"
-    let DbWebsiteToWebsite (ws:DbWebsite) =
-        {
-            key = ws.RowKey
-            url = match ws.Url with | null -> "" | u -> u
-            title = match ws.Title with | null -> "" | u -> u
-        }
-
-    let DbCommentToComment (comment:DbComment) =
-//        let time = comment.Timestamp
-        {
-            wskey = comment.PartitionKey
-            key = comment.RowKey
-            timestamp = DateTime.MinValue //comment.Timestamp
-            url = match comment.Url with | null -> "" | u -> u
-            text = match comment.Text with | null -> "" | t -> t
-            author = match comment.Author with | null -> "" | a -> a
-        }
 
 type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
     inherit RemoteHandler<Client.DashboardService.DashboardService>()
-    
-    let connStr = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-
-    let tableService = TableServiceClient(connStr)
-    let tableWebsites = tableService.GetTableClient("websites")
-//    tableWebsites.CreateIfNotExists() |> ignore
-    let tableComments = tableService.GetTableClient("comments")
-//    tableComments.CreateIfNotExists() |> ignore
-
 
     override this.Handler =
         {
             getWebsite = ctx.Authorize <| fun () -> async {
-                Console.WriteLine($"RowKey eq '{ctx.HttpContext.User.Identity.Name}'") |> ignore
-                return $"RowKey eq '{ctx.HttpContext.User.Identity.Name}'"
-                |> tableWebsites.Query<DbWebsite>
-                |> Enumerable.ToArray
-                |> Array.map DashboardServiceHelper.DbWebsiteToWebsite
-                |> Array.tryHead
+                return Queries.Website.ById ctx.HttpContext.User.Identity.Name
             }
 
             signIn = fun (url, password) -> async {
-                let user = $"Url eq '{url}' and Password eq '{password}'"
-                            |> tableWebsites.Query<DbWebsite>
-                            |> Enumerable.ToArray
-                            |> Array.map DashboardServiceHelper.DbWebsiteToWebsite
-                            |> Array.tryHead
-                match user with
-                | None -> return None
+                match Queries.Website.ByUrlAndPassword url password with
+                | None ->
+                    return None
                 | Some u ->
                     do! ctx.HttpContext.AsyncSignIn(u.key, TimeSpan.FromDays(365.))
                     return Some u
@@ -129,53 +35,51 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
             signUp = fun (signUpRequest) -> async {
                 let makeKey url =
                     String.filter (fun x -> x <> '.' && x <> '/') url
-                let row = new DbWebsite(DashboardServiceHelper.DbWebsitePartition,
-                                        makeKey(signUpRequest.url),
-                                        null,
-                                        signUpRequest.url,
-                                        signUpRequest.title,
-                                        signUpRequest.password)
-                
-                let x = tableWebsites.AddEntity row |> ignore
                     
+//                if signUpRequest.password <> signUpRequest.password2 then
+//                    return (Some "Passwords dont match")
+                
+                Queries.Website.Add {
+                    id = makeKey(signUpRequest.url)
+                    url = signUpRequest.url
+                    title = signUpRequest.title
+                    password = signUpRequest.password
+                    timestamp = DateTime.MinValue
+                }
+                
                 return None
             }
+            
 
-            addComment = fun (comment) -> async {
-                let rowKey = Guid.NewGuid().ToString()
-                let row = new DbComment(comment.wskey,
-                                        rowKey,
-                                        comment.url,
-                                        comment.text,
-                                        comment.author)
-                
-                let x = tableComments.AddEntity row |> ignore
-//                comments <- List.append [{ wskey=comment.wskey; key=comment.key; url=comment.url; text=comment.text; author=comment.author; timestamp=DateTime.Now}] comments
+            addComment = fun (p:addCommentParam) -> async {
+                let cmt = {
+                          id = Guid.NewGuid().ToString()
+                          wsId = p.wskey
+                          url = p.url
+                          authorId = p.author // TODO: generate authorid and set a cookie to allow users to delete comments
+                          author = p.author
+                          text = p.text
+                          timestamp = DateTime.MinValue
+                      }
+                Queries.Comment.Add cmt
                 return None
             }
 
             getComments = fun (url) -> async {
-                return $"Url eq '{url}'"
-                |> tableComments.Query<DbComment>
-                |> Enumerable.ToArray
-                |> Array.map DashboardServiceHelper.DbCommentToComment
-                |> Array.toList
+                return Queries.Comment.ByUrl url
+                        |> Array.toList
             }
             
             getPagesWithComments = fun (key) -> async {
-                let comments =
-                    $"PartitionKey eq '{key}'"
-                    |> tableComments.Query<DbComment>
-                    |> Enumerable.ToArray
-                    |> Array.map DashboardServiceHelper.DbCommentToComment
-                    |> Array.toList
+                let ws = Queries.Website.ById key
+                let urls = Queries.Comment.UrlsByWebsite key
                 
-                return comments
-                |> List.distinctBy (fun x -> x.url)
-                |> List.map (fun x -> {
-                    wskey = x.wskey
-                    url = x.url
-                    comments = comments |> List.filter (fun y -> y.url = x.url)
-                })
+                return urls
+                    |> Array.map (fun url -> {
+                            wskey = key
+                            url = url
+                            comments = Queries.Comment.ByUrl url |> Array.toList
+                        })
+                    |> Array.toList
             }
         }

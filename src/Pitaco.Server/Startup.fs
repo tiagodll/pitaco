@@ -13,8 +13,8 @@ type Startup() =
 
     member this.ConfigureServices(services: IServiceCollection) =
         services
-            .AddCors(fun options -> options.AddPolicy("CorsPolicy", fun policy ->
-                policy.AllowCredentials().AllowAnyMethod().AllowAnyHeader().WithOrigins([|"https://localhost";"https://localhost:55001"|]) |> ignore
+            .AddCors(fun options -> options.AddDefaultPolicy(fun policy ->
+                policy.AllowCredentials().AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(fun x -> true) |> ignore
             ))
             .AddMvc() |> ignore
         services.AddServerSideBlazor() |> ignore
@@ -32,7 +32,7 @@ type Startup() =
 
     member this.Configure(app: IApplicationBuilder, env: IWebHostEnvironment) =
         app
-            .UseCors("CorsPolicy")
+            .UseCors()
             .UseAuthentication()
             .UseRemoting()
             .UseStaticFiles()
@@ -50,6 +50,8 @@ module Program =
 
     [<EntryPoint>]
     let main args =
+        Pitaco.Database.Migrations.migrate |> ignore
+        
         WebHost
             .CreateDefaultBuilder(args)
             .UseStaticWebAssets()

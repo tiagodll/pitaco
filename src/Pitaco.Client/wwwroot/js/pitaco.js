@@ -2,12 +2,13 @@
 
 function pitaco(id) {
     let base = document.getElementById("pitaco");
+    let baseurl = "https://pitaco.dalligna.com"
     if (typeof (base) === undefined)
         console.log("### PITACO is missing a div with id 'pitaco'");
 
     let loadComments = () => {
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://pitacofunctionapi.azurewebsites.net/api/getComments");
+        xhr.open("POST", baseurl+"/api/getComments");
         xhr.setRequestHeader('Content-type', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.overrideMimeType("text/html");
@@ -16,7 +17,7 @@ function pitaco(id) {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 let resp = "";
                 for (let comment of JSON.parse(xhr.responseText))
-                    resp += `<li>${comment.text} - ${comment.author}</li>`;
+                    resp += `<li><q class="text">${comment.text}</q><span class="author">${comment.author}</span></li>`;
                 document.getElementById('pitaco_commentBoxLog').innerHTML = resp;
             }
         };
@@ -24,7 +25,7 @@ function pitaco(id) {
 
     let postComment = () => {
         let client = new XMLHttpRequest();
-        client.open("POST", "https://pitacofunctionapi.azurewebsites.net/api/addComment");
+        client.open("POST", baseurl+"/api/addComment");
         client.setRequestHeader('Content-type', 'application/json');
         client.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         client.overrideMimeType('text/html');
@@ -33,8 +34,6 @@ function pitaco(id) {
             url: document.location.href,
             text: document.getElementById("pitaco_comment").value,
             author: document.getElementById("pitaco_author").value,
-            key: "",
-            timestamp: "2021-01-01"
         }));
         client.onreadystatechange = function () {
             if (client.readyState === 4 && client.status === 200) {
@@ -45,14 +44,16 @@ function pitaco(id) {
         };
     };
 
-    base.innerHTML = "<ul id='pitaco_commentBoxLog'></ul>"
-        + "Message: <br><textarea id='pitaco_comment'></textarea><br>"
-        + "Author: <br><input type='text' id='pitaco_author' />";
+    base.innerHTML = "<ul id='pitaco_commentBoxLog' class='pitaco comments'></ul>"
+        + "<div id='pitaco_commentbox' class='pitaco commentbox'>"
+        + " <div class='pitaco messagebox'><label for='pitaco_comment'>Message: </label><textarea id='pitaco_comment'></textarea></div>"
+        + " <div class='pitaco authorbox'><label for='pitaco_author'>Author: </label><input type='text' id='pitaco_author' /></div>"
+        + "</div>";
 
     let btn = document.createElement("button");
     btn.innerText = "Post";
     btn.onclick = postComment;
-    base.append(btn);
+    document.getElementById("pitaco_commentbox").append(btn);
 
     loadComments();
 

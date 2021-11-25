@@ -1,0 +1,44 @@
+﻿#pitaco {
+  border: solid 1px #666;
+  background: #333;
+  padding: 10px;
+}
+
+
+#pitaco ul.comments{
+  padding: 0;
+  list-style: none;
+}
+
+#pitaco ul.comments li .text{
+  
+}
+
+#pitaco ul.comments li .author:before {
+    content: ' - ';
+}
+#pitaco ul.comments li .author{
+  padding-left: 5px;
+  color: #999
+}
+
+#pitaco .commentbox{
+  border-top: solid #ccc 1px;
+  padding-top: 10px;
+/*   display: flex; */
+}
+
+#pitaco .messagebox label{
+  display: block;
+}
+
+#pitaco .authorbox, #pitaco .messagebox, #pitaco button{
+   margin: 10px;
+}
+
+#pitaco .authorbox label{
+  display: block;
+}
+
+#pitaco button { 
+}

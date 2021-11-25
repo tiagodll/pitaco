@@ -10,7 +10,7 @@ type DashboardService =
         signOut : unit -> Async<unit>
         signUp : SignUpRequest -> Async<string option>
         getComments: string -> Async<Comment list>
-        addComment: Comment -> Async<string option>
+        addComment: addCommentParam -> Async<string option>
         getPagesWithComments: string -> Async<WsPage list>
     }
 

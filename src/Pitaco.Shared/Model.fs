@@ -11,8 +11,8 @@ module Model =
     }
 
     and Comment = {
+        key:string
         wskey: string
-        key: string
         url: string
         text: string
         author: string
@@ -37,4 +37,9 @@ module Model =
         comments: Comment list
     }
    
-   
+    and addCommentParam = {
+        wskey: string
+        url: string
+        author: string
+        text: string
+    }

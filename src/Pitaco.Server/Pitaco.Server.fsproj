@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pitaco.Shared\Pitaco.Shared.fsproj" />
     <ProjectReference Include="..\Pitaco.Client\Pitaco.Client.fsproj" />
+    <ProjectReference Include="..\Pitaco.Database\Pitaco.Database.fsproj" />
     <PackageReference Include="Bolero.Server" Version="0.*" />
     <PackageReference Include="Bolero.HotReload.Server" Version="0.*" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.*" />
