@@ -12,8 +12,6 @@
     <ProjectReference Include="..\Pitaco.Shared\Pitaco.Shared.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Dapper.FSharp" Version="3.1.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.0" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.115.5" />
   </ItemGroup>
 </Project>
