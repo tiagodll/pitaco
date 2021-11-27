@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:51487/",
-      "sslPort": 44308
+      "applicationUrl": "http://localhost:55001/",
+      "sslPort": 55002
     }
   },
   "profiles": {
@@ -13,7 +13,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=pitaco;AccountKey=I+UfwKCn8oX7drOOZXW/e7+D+zISgd0WqX79yRX80YnIEMwK1r0A6NPmEqjLUkFSxascbRYRyxys6kzOBh3gjw==;EndpointSuffix=core.windows.net"
+        "CONNECTION_STRING": "Data Source=./pitaco.db;Pooling=True"
       }
     },
     "Pitaco.Server": {

@@ -10,13 +10,13 @@ let connection = new SqliteConnection (Environment.GetEnvironmentVariable("CONNE
 
 let runNQ (cmd:SqliteCommand) =
     connection.Open()
-    cmd.ExecuteNonQuery() |> ignore
+    let r = cmd.ExecuteNonQuery()
     connection.Close()
 
 let runQ (cmd:SqliteCommand) f =
     connection.Open()
     let reader = cmd.ExecuteReader()
-    if reader.Read() then
+    while reader.Read() do
         f(reader)
     connection.Close()
     
@@ -64,7 +64,11 @@ module Comment =
         command.Parameters.AddWithValue("@author", comment.author) |> ignore
         command.Parameters.AddWithValue("@author_id", comment.authorId) |> ignore
         command.Parameters.AddWithValue("@text", comment.text) |> ignore
-        runNQ command
+        try
+            runNQ command
+            None
+        with msg -> 
+            Some msg
     
     let Delete id =
         use command = new SqliteCommand("DELETE FROM websites WHERE id=@id", connection)       
@@ -97,37 +101,3 @@ module Comment =
             result.Add(reader.["url"].ToString())
         )
         result.ToArray()
-
-    // let GetSingleByEmail email = 
-    //     querySingleAsync<DbTypes.Person> {
-    //         script "SELECT * FROM People WHERE Email = @Email LIMIT 1"
-    //         parameters (dict ["Email", box email])
-    //     }
-    //     |> Async.RunSynchronously
-
-    // let GetPerson id = 
-    //     querySingleAsync<DbTypes.Person> {
-    //         script "SELECT * FROM People WHERE id = @id LIMIT 1"
-    //         parameters (dict ["id", box id])
-    //     }
-    //     |> Async.RunSynchronously
-
-    // let GetPeople () = 
-    //     querySeqAsync<DbTypes.Person> { script "SELECT * FROM People" } 
-    //     |> Async.RunSynchronously
-    //     |> Seq.toArray
-
-    // let GetConnections id = querySingleAsync<DbTypes.Profile> {
-    //     script "SELECT p. FROM Connections c JOIN Profiles p ON c.profile_id = p.id WHERE person_id = @id LIMIT 1"
-    //     parameters (dict ["id", box id])
-    // }
-
-    // let UpdateAliasByName email name = querySingleAsync<int> {
-    //     script "UPDATE People SET Name = @Name WHERE Email = @Email"
-    //     parameters (dict ["Email", box email; "Name", box name])
-    // }
-
-    // let DeleteByName email = querySingleAsync<int> {
-    //     script "DELETE FROM People WHERE Email = @Email"
-    //     parameters (dict ["Email", box email])
-    // }

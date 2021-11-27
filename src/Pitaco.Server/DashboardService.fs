@@ -61,8 +61,9 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                           text = p.text
                           timestamp = DateTime.MinValue
                       }
-                Queries.Comment.Add cmt
-                return None
+                return match Queries.Comment.Add cmt with
+                        | None -> None
+                        | Some ex -> Some ex.Message
             }
 
             getComments = fun (url) -> async {
@@ -81,5 +82,10 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                             comments = Queries.Comment.ByUrl url |> Array.toList
                         })
                     |> Array.toList
+            }
+
+            ping = fun () -> async {
+                Pitaco.Database.Migrations.migrate |> ignore
+                return "pong"
             }
         }

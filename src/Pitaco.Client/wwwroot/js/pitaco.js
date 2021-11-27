@@ -1,8 +1,7 @@
 ﻿'use strict';
 
-function pitaco(id) {
+function pitaco(id, baseurl="https://pitaco.dalligna.com") {
     let base = document.getElementById("pitaco");
-    let baseurl = "https://pitaco.dalligna.com"
     if (typeof (base) === undefined)
         console.log("### PITACO is missing a div with id 'pitaco'");
 

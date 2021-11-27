@@ -12,6 +12,7 @@ type DashboardService =
         getComments: string -> Async<Comment list>
         addComment: addCommentParam -> Async<string option>
         getPagesWithComments: string -> Async<WsPage list>
+        ping: unit -> Async<string>
     }
 
     interface IRemoteService with
