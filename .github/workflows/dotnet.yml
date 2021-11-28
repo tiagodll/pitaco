@@ -33,6 +33,15 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
+      
+      - name: copy Dockerfile
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SOURCE: "devops/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
           
       - name: Configure SSH
         run: |
@@ -52,15 +61,18 @@ jobs:
           SSH_HOST: ${{ secrets.REMOTE_HOST }}
 
       - name: Stop the server
-        run: ssh staging 'sudo docker stop pitaco'
+        run: ssh staging 'whoami'
+
+      - name: Stop the server
+        run: ssh staging 'docker stop pitaco'
 
       - name: Check out the source
-        run: ssh staging 'sudo docker build -t pitaco . --rm'
+        run: ssh staging 'docker build -t pitaco . --rm'
 
       - name: Start the server
         if: ${{ always() }}
         run: |
-          ssh staging 'sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t \
+          ssh staging 'docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t \
               --env ASPNETCORE_ENVIRONMENT=Production \
               --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} \
               --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" \
