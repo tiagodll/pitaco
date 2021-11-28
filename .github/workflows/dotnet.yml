@@ -35,15 +35,17 @@ jobs:
           TARGET: ${{ secrets.REMOTE_TARGET }}
 
       - name: stop docker image
-        run: sudo docker stop pitaco
-
-      - name: build new image
-        run: sudo docker build -t pitaco . --rm
-
-      - name: run docker image
-        run: sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t |
-              --env ASPNETCORE_ENVIRONMENT=Production |
-              --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} |
-              --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" |
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo docker stop pitaco
+            sudo docker build -t pitaco . --rm
+            sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t \
+              --env ASPNETCORE_ENVIRONMENT=Production \
+              --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} \
+              --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" \
               --name pitaco -d --restart unless-stopped -it pitaco
 
