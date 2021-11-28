@@ -33,19 +33,36 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
+          
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.REMOTE_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.REMOTE_HOST }}
 
-      - name: stop docker image
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sudo docker stop pitaco
-            sudo docker build -t pitaco . --rm
-            sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t \
+      - name: Stop the server
+        run: ssh staging 'sudo docker stop pitaco'
+
+      - name: Check out the source
+        run: ssh staging 'sudo docker build -t pitaco . --rm'
+
+      - name: Start the server
+        if: ${{ always() }}
+        run: |
+          ssh staging 'sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t \
               --env ASPNETCORE_ENVIRONMENT=Production \
               --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} \
               --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" \
-              --name pitaco -d --restart unless-stopped -it pitaco
+              --name pitaco -d --restart unless-stopped -it pitaco'
 
