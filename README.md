@@ -3,26 +3,6 @@ Platform to add comments section to static websites.
 
 this is a study app, not to be used in prod
 
-# study points:
-
-- [x] F# / bolero (blazor)
-- [x] HTML in blob storage
-- [ ] unit testing in F#
-- [x] Azure storage # static page for testing the app
-- [x] Azure storage tables # database
-- [x] Azure storage queue # to implement event sourcing
-- [x] Azure functions # api
-- [ ] auth b2c
-
-# TODO:
-- [x] create function to add and get comments
-- [x] change javascript html to load and post to the function
-- [ ] make a container
-- [ ] deploy the app to container
-- [x] deploy the function to azure functions
-- [x] deploy the javascript html to blob storage
-- ?
-
 
 ## How to add pitaco to a static website
 
@@ -31,13 +11,55 @@ create a div, with the id pitaco
 <div id="pitaco" />
 ```
 
-add reference to the javascript client:
+add reference to the css and javascript client:
 ```html
-<script type="text/javascript" src="https://localhost:5001/js/pitaco.js"></script>
+<link rel="stylesheet" src="https://pitaco.dalligna.com/css/pitaco.css"/>
+<script type="text/javascript" src="https://pitaco.dalligna.com/js/pitaco.js"></script>
 ```
 and finally, call the pitaco function, passing your website id as reference
 ```html
 <script type="text/javascript">
-	pitaco("test");
+	(function () {
+		pitaco("test", "https://localhost:55001"); //your instance url here
+	})();
 </script>
+```
+
+## if you want to deploy your own instance
+
+Download, publish and copy to a server. 
+(use self contained if you dont want to install dotnet in your server)
+```bash
+dotnet publish src/Pitaco.Server/ -c Release -o ./publish --self-contained --runtime linux-x64
+```
+
+Create a service to run the app (log into your server, create a file called pitaco.service)
+
+```ini
+[Unit]
+Description=Pitaco kestrel service
+
+[Service]
+WorkingDirectory=/path/to/pitaco
+ExecStart=/path/to/pitaco/Pitaco.Server
+SyslogIdentifier=Pitaco
+Restart=always
+User=your-user
+RestartSec=5
+# copied from dotnet documentation at
+# https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-3.1#code-try-7
+KillSignal=SIGINT
+Environment="ASPNETCORE_ENVIRONMENT=Production"
+Environment="ASPNETCORE_URLS=http://+:6000"
+Environment="CONNECTION_STRING=Data Source=/path/to/pitaco.db;Pooling=True"
+Environment="DOTNET_PRINT_TELEMETRY_MESSAGE=false"
+
+[Install]
+WantedBy=multi-user.target
+```
+then install the service
+```bash
+sudo cp pitaco.service /etc/systemd/system/pitaco.service
+sudo systemctl daemon-reload
+sudo systemctl start pitaco
 ```
