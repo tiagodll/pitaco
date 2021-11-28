@@ -12,7 +12,8 @@ let page = doctypeHtml [] [
         title [] [text "Pitaco"]
         ``base`` [attr.href "/"]
         link [attr.rel "stylesheet"; attr.href "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"]
-        link [attr.rel "stylesheet"; attr.href "css/index.css"]
+        link [attr.rel "stylesheet"; attr.href "https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css"]
+        link [attr.rel "stylesheet"; attr.href "css/pitaco.css"]
         script [attr.src "js/interop.js"] []
     ]
     body [] [

@@ -79,7 +79,7 @@ let update (js:IJSRuntime) remote message model =
                                         | None -> ""
                                         | Some r2 -> r2.key
                                         
-            let cmdD' = Dashboard.loadPages key remote            
+            let cmdD' = Dashboard.loadPages remote key            
             { model with auth = res' }, Cmd.batch [Cmd.map AuthMsg cmd'; Cmd.map DashboardMsg cmdD']
         | _ -> 
             let res', cmd' = Auth.update js remote msg' model.auth
@@ -144,12 +144,12 @@ let view model dispatch =
         cond model.page <| function
         | Dashboard ->
             cond model.auth.signIn.signedInAs <| function
-                | Some user -> header model dispatch (Dashboard.dashboardPage model.dashboard user dispatch)
+                | Some user -> header model dispatch <| Dashboard.dashboardPage model.dashboard user (fun x -> dispatch (DashboardMsg x))
                 | None -> header model dispatch <| Auth.signInPage model.auth (fun x -> dispatch (AuthMsg x))
                 
         | Homepage ->
             cond model.auth.signIn.signedInAs <| function
-                | Some user -> header model dispatch <| Dashboard.dashboardPage model.dashboard user dispatch
+                | Some user -> header model dispatch <| Dashboard.dashboardPage model.dashboard user (fun x -> dispatch (DashboardMsg x))
                 | None -> homePage model dispatch
         
         | SignUp ->

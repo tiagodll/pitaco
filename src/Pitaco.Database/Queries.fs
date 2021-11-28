@@ -71,9 +71,13 @@ module Comment =
             Some msg
     
     let Delete id =
-        use command = new SqliteCommand("DELETE FROM websites WHERE id=@id", connection)       
+        use command = new SqliteCommand("DELETE FROM comments WHERE id=@id", connection)       
         command.Parameters.AddWithValue("@id", id) |> ignore
-        runNQ command
+        try
+            runNQ command
+            None
+        with msg -> 
+            Some msg
 
     let ByUrl url =
         let result = new List<Comment>()

@@ -1,4 +1,9 @@
-﻿#pitaco {
+﻿.clickable{
+  cursor: pointer;
+  
+}
+
+#pitaco {
   border: solid 1px #666;
   background: #333;
   padding: 10px;

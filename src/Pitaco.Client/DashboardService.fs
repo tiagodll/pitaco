@@ -11,6 +11,7 @@ type DashboardService =
         signUp : SignUpRequest -> Async<string option>
         getComments: string -> Async<Comment list>
         addComment: addCommentParam -> Async<string option>
+        deleteComment: string -> Async<string>
         getPagesWithComments: string -> Async<WsPage list>
         ping: unit -> Async<string>
     }

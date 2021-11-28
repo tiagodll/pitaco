@@ -65,6 +65,11 @@ type DashboardService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                         | None -> None
                         | Some ex -> Some ex.Message
             }
+            
+            deleteComment = fun (key:string) -> async {
+                Queries.Comment.Delete key |> ignore
+                return key
+            }
 
             getComments = fun (url) -> async {
                 return Queries.Comment.ByUrl url
