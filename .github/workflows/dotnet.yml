@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build and deploy:
 
     runs-on: ubuntu-latest
 
@@ -25,32 +25,25 @@ jobs:
       - name: dotnet publish
         run: dotnet publish src/Pitaco.Server/ -c Release -o ${{env.DOTNET_ROOT}}/publish
       
-  deploy:
+      - name: copy published files
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SOURCE: "${{env.DOTNET_ROOT}}/publish/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
 
-    runs-on: ubuntu-latest
+      - name: stop docker image
+        run: sudo docker stop pitaco
 
-    steps:
-    - uses: actions/checkout@v2
-    
-    - name: copy published files
-      uses: easingthemes/ssh-deploy@main
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SOURCE: "${{env.DOTNET_ROOT}}/publish/"
-        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-        REMOTE_USER: ${{ secrets.REMOTE_USER }}
-        TARGET: ${{ secrets.REMOTE_TARGET }}
-      
-    - name: stop docker image
-      run: sudo docker stop pitaco
-      
-    - name: build new image
-      run: sudo docker build -t pitaco . --rm
-      
-    - name: run docker image
-      run: sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t |
-            --env ASPNETCORE_ENVIRONMENT=Production |
-            --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} |
-            --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" |
-            --name pitaco -d --restart unless-stopped -it pitaco
-            
+      - name: build new image
+        run: sudo docker build -t pitaco . --rm
+
+      - name: run docker image
+        run: sudo docker run -p ${{ secrets.PORT }}:${{ secrets.PORT }} -t |
+              --env ASPNETCORE_ENVIRONMENT=Production |
+              --env ASPNETCORE_URLS=http://+:${{ secrets.PORT }} |
+              --env CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" |
+              --name pitaco -d --restart unless-stopped -it pitaco
+
