@@ -61,7 +61,7 @@ jobs:
           SSH_HOST: ${{ secrets.REMOTE_HOST }}
 
       - name: Stop the server
-        run: ssh staging 'whoami'
+        run: ssh staging 'cd src'
 
       - name: Stop the server
         run: ssh staging 'docker stop pitaco'
