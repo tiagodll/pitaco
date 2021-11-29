@@ -6,7 +6,6 @@ type MigrationItem = {
     version: int
     content: string
 }
-let connection = new SqliteConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"))
 
 let getCurrentVersion connection =
     let selectCommand = new SqliteCommand("SELECT value FROM Config WHERE label='DbVersion'", connection)
@@ -27,9 +26,7 @@ let applyMigration connection item =
     cmdVersion.Parameters.AddWithValue("@version", item.version) |> ignore
     cmdVersion.ExecuteNonQuery() |> ignore
 
-let migrate =
-    connection.Open()
-
+let runMigrations connection =
     "CREATE TABLE IF NOT EXISTS Config (label TEXT, value TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)"
     |> (fun x -> (new SqliteCommand(x, connection)).ExecuteNonQuery())
     |> ignore
@@ -45,7 +42,7 @@ let migrate =
         password TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);
         
-        INSERT INTO websites(id, url, title, password) VALUES ('tiagodallignacom', 'tiago.dalligna.com', 'the blog', 'asd');
+        INSERT INTO websites(id, url, title, password) VALUES ('tiagodallignacom', 'tiago.dalligna.com', 'the blog', '{asd}');
         
         CREATE TABLE comments (
         id TEXT,
@@ -59,5 +56,9 @@ let migrate =
     |]
     |> Array.filter (fun x -> x.version > currentVersion)
     |> Array.iter (applyMigration connection)
-
+    
+let migrate () =
+    let connection = new SqliteConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"))
+    connection.Open()
+    runMigrations connection
     connection.Close()
